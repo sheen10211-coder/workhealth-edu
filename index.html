@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="晨光" data-font-size="medium">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>職人健康領航島｜3D 群島學習基地</title>
+  <meta name="description" content="守護職場身心健康，打造青年勞動新活力的知識基地！大專學生職業衛生與健康促進 3D 互動島嶼網站。">
+  
+  <link rel="stylesheet" href="styles.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-navbar">
+    <div class="brand-badge" id="btn-brand-story" title="點擊查看ㄚ秀姐姐與輔英科大教學品牌故事" role="button" tabindex="0">
+      <div class="mascot-avatar" id="mascot-avatar-display">🦌</div>
+      <div class="brand-text">
+        <h1>職人健康領航島</h1>
+        <p>守護職場身心健康・打造青年勞動新活力</p>
+      </div>
+    </div>
+
+    <div class="tools-cluster">
+      <!-- Font size setting (Extra requirement 1) -->
+      <div class="btn-group" aria-label="字體大小切換">
+        <button class="tool-btn icon-btn" id="font-small" title="字體小" aria-label="字體小">A-</button>
+        <button class="tool-btn icon-btn active" id="font-medium" title="字體中" aria-label="字體中">A</button>
+        <button class="tool-btn icon-btn" id="font-large" title="字體大" aria-label="字體大">A+</button>
+      </div>
+
+      <!-- Theme Switcher -->
+      <div class="btn-group" aria-label="底色主題切換">
+        <button class="tool-btn active" id="theme-auto" title="依時段自動換底色">🌅 自動</button>
+        <button class="tool-btn" id="theme-morning" title="晨光主題">☀️ 晨光</button>
+        <button class="tool-btn" id="theme-mist" title="海霧主題">🌫️ 海霧</button>
+        <button class="tool-btn" id="theme-night" title="夜海主題">🌌 夜海</button>
+      </div>
+
+      <!-- Day / Night cycle switcher -->
+      <div class="btn-group" aria-label="晝夜光線切換">
+        <button class="tool-btn active" id="dn-day" title="白天陽光">☀️</button>
+        <button class="tool-btn" id="dn-dusk" title="黃昏暖光">🌇</button>
+        <button class="tool-btn" id="dn-night" title="夜晚星空">🌙</button>
+        <button class="tool-btn" id="dn-auto" title="時間流動">⏱️</button>
+        <span id="live-clock-badge" style="font-size: 0.8rem; padding: 0 6px; color: var(--ink-light); font-variant-numeric: tabular-nums;">白天 10:00</span>
+      </div>
+
+      <!-- Settings & Controls -->
+      <div class="btn-group">
+        <button class="tool-btn icon-btn" id="btn-audio" title="背景音樂開關" aria-label="背景音樂">🔇 音樂</button>
+        <button class="tool-btn icon-btn" id="btn-motion" title="減少動態 / 暫停動畫" aria-label="減少動態">⏸️</button>
+        <button class="tool-btn icon-btn" id="btn-quality" title="切換高低畫質" aria-label="切換畫質">💎 極致</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3D Canvas Viewport -->
+  <main id="canvas-container" aria-label="3D 島嶼互動場景"></main>
+
+  <!-- Floating Island Labels -->
+  <div class="island-labels-container" id="island-labels-container"></div>
+
+  <!-- Dialogue Bubble Overlay -->
+  <div class="dialogue-bubble" id="dialogue-bubble" style="display: none;">
+    <div class="dialogue-header">
+      <div class="dialogue-speaker">
+        <span id="dlg-avatar">🧑</span>
+        <span id="dlg-name">志明</span>
+        <span class="dialogue-title-tag" id="dlg-title">工安技師</span>
+      </div>
+      <button class="dialogue-close-btn" id="btn-close-dialogue" aria-label="關閉對話">✕</button>
+    </div>
+    <div class="dialogue-body" id="dlg-text">歡迎來到這座島！安全第一，記得戴好安全帽喔！</div>
+    <div class="dialogue-actions">
+      <button class="dialogue-btn" id="btn-dialogue-more">💬 再聊聊</button>
+      <button class="dialogue-btn" id="btn-dialogue-trade" style="display: none;">🔁 交易物資</button>
+    </div>
+  </div>
+
+  <!-- Cinema Skip Button -->
+  <button class="cinema-skip-btn" id="cinema-skip-btn">⏩ 跳過開場運鏡 (Esc)</button>
+
+  <!-- Floating Bottom Functional Bar -->
+  <nav class="bottom-controls" aria-label="功能工具列">
+    <button class="bottom-pill-btn" id="btn-open-list" title="開啟地點清單與純文字版">🗺️ 地點清單</button>
+    <button class="bottom-pill-btn" id="btn-open-search" title="搜尋群島與知識">🔍 搜尋</button>
+    <button class="bottom-pill-btn" id="btn-open-backpack" title="檢視背包與物資">🎒 背包 <span class="badge-counter" id="backpack-counter">3</span></button>
+    <button class="bottom-pill-btn" id="btn-open-collection" title="收集成就圖鑑">📖 圖鑑 <span class="badge-counter" id="collection-counter">0/6</span></button>
+    <button class="bottom-pill-btn" id="btn-open-guide" title="向小嚮導提問">💡 小嚮導</button>
+    <button class="bottom-pill-btn" id="btn-open-cert" title="檢視完成證書">📜 證書</button>
+    <button class="bottom-pill-btn" id="btn-open-share" title="分享島嶼">🔗 分享</button>
+    <button class="bottom-pill-btn primary" id="btn-reset-camera" title="返回群島全景">🏠 回到全景</button>
+  </nav>
+
+  <!-- Slide-out Content Panel (Sidebar on desktop / Drawer on mobile) -->
+  <aside class="content-panel" id="content-panel" aria-label="島嶼內容面板">
+    <div class="panel-header">
+      <button class="panel-close-btn" id="btn-close-panel" aria-label="關閉面板 (Esc)">✕</button>
+      <div class="panel-title-area">
+        <span class="panel-group-badge" id="panel-group-badge">基礎導讀</span>
+        <h2 class="panel-title" id="panel-island-title">01 職場衛生啟航島</h2>
+        <p class="panel-tagline" id="panel-tagline">認識職業衛生基礎與法規核心觀念</p>
+        <div class="learning-goal-banner" id="panel-extra-banner">
+          <strong>學習目標：</strong><span id="panel-extra-text">能說出職場常見危害並理解基本法令保護機制</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs for Course Islands -->
+    <div class="panel-tabs" id="panel-tabs">
+      <button class="tab-btn active" data-tab="tab-textbook">📚 核心教材</button>
+      <button class="tab-btn" data-tab="tab-worksheet">✍️ 實作學習單</button>
+      <button class="tab-btn" data-tab="tab-quiz">📝 隨堂測驗 <span class="badge-counter" id="tab-quiz-status">未測</span></button>
+    </div>
+
+    <!-- Panel Body with Multi-pane Content -->
+    <div class="panel-body">
+      <!-- Pane 1: Textbook -->
+      <section class="tab-pane active" id="pane-textbook">
+        <div class="textbook-content" id="textbook-render-target"></div>
+        <div class="material-download-box" id="material-download-box">
+          <div>
+            <strong>📄 原廠教材講義</strong>
+            <p style="font-size: 0.8rem; color: var(--ink-light); margin: 0;">支援離線閱讀與研討下載</p>
+          </div>
+          <a href="#" id="link-download-material" target="_blank" download>下載講義 (.md)</a>
+        </div>
+      </section>
+
+      <!-- Pane 2: Worksheet -->
+      <section class="tab-pane" id="pane-worksheet">
+        <div style="margin-bottom: 14px;">
+          <h3 style="color: var(--primary); font-family: var(--font-heading); margin-bottom: 4px;">島主實作學習單</h3>
+          <p style="font-size: 0.85rem; color: var(--ink-light);">您的填答會自動儲存於此瀏覽器，並可匯出為 Markdown 學習歷程檔案！</p>
+        </div>
+        <div id="worksheet-render-target"></div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+          <button class="export-btn" id="btn-export-worksheet">📥 匯出個人學習單 (Markdown)</button>
+        </div>
+      </section>
+
+      <!-- Pane 3: Quiz -->
+      <section class="tab-pane" id="pane-quiz">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 0.85rem; background: var(--primary-light); color: var(--primary); padding: 3px 8px; border-radius: 4px; font-weight: bold;">自編練習題（每課 3 題）</span>
+          <span id="quiz-score-badge" style="font-weight: bold; color: var(--accent);"></span>
+        </div>
+        <div id="quiz-render-target"></div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button class="export-btn" id="btn-retry-quiz" style="background: var(--muted); display: none;">🔄 重新測驗</button>
+        </div>
+      </section>
+
+      <!-- Center Island Special Pane: Hospital & Review -->
+      <section class="tab-pane" id="pane-center-hospital">
+        <div class="textbook-content">
+          <div style="background: var(--primary-light); border: 2px solid var(--primary); border-radius: var(--radius); padding: 16px; margin-bottom: 16px;">
+            <h3 style="color: var(--primary); margin: 0 0 6px;">🏥 職健綜合醫院（Occupational Health Clinic）</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 8px;">中央島核心健康守護地標！融合火山地熱溫泉與專業職衛照護，負責提供全人健康篩檢與跨課總複習診斷。</p>
+            <div style="font-size: 0.85rem; color: var(--ink-light);">
+              🌟 <b>院長</b>：ㄚ秀姐姐 ｜ 🌟 <b>協作單位</b>：輔英科技大學健康專業教學團隊
+            </div>
+          </div>
+
+          <h3 style="color: var(--primary); font-family: var(--font-heading);">🎯 跨課總複習 10 題診斷測驗</h3>
+          <p style="font-size: 0.9rem; color: var(--ink-light); margin-bottom: 14px;">從 6 座島精選 10 題核心觀念進行整合診斷，達到 80 分以上可解鎖領取「職人健康領航證書」！</p>
+          <div id="center-quiz-render-target"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <span id="center-quiz-score-badge" style="font-size: 1.1rem; font-weight: bold; color: var(--accent);"></span>
+            <button class="export-btn" id="btn-submit-center-quiz">📑 送出總複習診斷</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- Modal: Location List (Pure Text Alternative) -->
+  <div class="modal-overlay" id="modal-list">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">🗺️ 地點清單與課程地圖</div>
+        <button class="modal-close-btn" data-close="modal-list" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--ink-light); margin-bottom: 12px;">無障礙純文字版本：點選任一課程島嶼即可直接開啟教材與測驗，不需操作 3D 亦能完整研讀！</p>
+        <div style="display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;" id="sea-filter-container">
+          <button class="tool-btn active" data-filter="all">全部海域</button>
+          <button class="tool-btn" data-filter="核心行政">核心行政</button>
+          <button class="tool-btn" data-filter="基礎導讀">基礎導讀</button>
+          <button class="tool-btn" data-filter="專業認知">專業認知</button>
+          <button class="tool-btn" data-filter="心靈維護">心靈維護</button>
+          <button class="tool-btn" data-filter="健康促進">健康促進</button>
+          <button class="tool-btn" data-filter="實務技能">實務技能</button>
+          <button class="tool-btn" data-filter="綜合應用">綜合應用</button>
+        </div>
+        <div id="location-cards-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Search -->
+  <div class="modal-overlay" id="modal-search">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">🔍 全島關鍵字搜尋</div>
+        <button class="modal-close-btn" data-close="modal-search" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="guide-search-bar">
+          <input type="text" class="guide-input" id="search-input" placeholder="輸入關鍵字（例如：法規、退避權、SDS、過勞、伸展操、醫院、ESG...）" autofocus>
+          <button class="export-btn" id="btn-run-search">搜尋</button>
+        </div>
+        <div id="search-results-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Backpack & Trading -->
+  <div class="modal-overlay" id="modal-backpack">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">🎒 探險者物資背包</div>
+        <button class="modal-close-btn" data-close="modal-backpack" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--ink-light); margin-bottom: 12px;">在各島沙灘點擊 🐚 撿貝殼，並與居民交談進行交易，完成健康物資交換鏈！</p>
+        <div class="inventory-grid" id="inventory-grid"></div>
+        
+        <div class="trade-chain-box">
+          <h4 style="color: var(--primary); margin-bottom: 8px;">🔄 職人健康物資交換指引</h4>
+          <div class="trade-chain-step">🐚 <b>海灘貝殼</b> ➔ 01 志明換 🥽 <b>防護護目鏡</b></div>
+          <div class="trade-chain-step">🥽 <b>防護護目鏡</b> ➔ 02 俊傑換 🧪 <b>採樣試管</b></div>
+          <div class="trade-chain-step">🧪 <b>採樣試管</b> ➔ 03 思妤換 🍵 <b>舒壓洋甘菊茶</b></div>
+          <div class="trade-chain-step">🍵 <b>舒壓洋甘菊茶</b> ➔ 04 柏翰換 🎗️ <b>活力彈力帶</b></div>
+          <div class="trade-chain-step">🎗️ <b>活力彈力帶</b> ➔ 05 宗翰換 📋 <b>健促企劃藍圖</b></div>
+          <div class="trade-chain-step">📋 <b>健促企劃藍圖</b> ➔ 06 振華換 🏆 <b>職人健康領航金獎章（稀有）</b></div>
+        </div>
+
+        <div style="margin-top: 16px; text-align: right;">
+          <button class="tool-btn" id="btn-clear-backpack" style="color: var(--danger);">🗑️ 重置背包與進度</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Collection Album -->
+  <div class="modal-overlay" id="modal-collection">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">📖 島嶼探索與成就圖鑑</div>
+        <button class="modal-close-btn" data-close="modal-collection" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px;">
+            <span>全島學習探索進度</span>
+            <span id="collection-percent-text">0%</span>
+          </div>
+          <div style="background: var(--line); border-radius: 10px; height: 12px; overflow: hidden;">
+            <div id="collection-progress-bar" style="background: var(--accent); width: 0%; height: 100%; transition: width 0.4s ease;"></div>
+          </div>
+        </div>
+        <div class="inventory-grid" id="collection-cards-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Interactive Guide Q&A (小嚮導) -->
+  <div class="modal-overlay" id="modal-guide">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">💡 衛康小鹿・小嚮導諮詢台</div>
+        <button class="modal-close-btn" data-close="modal-guide" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--ink-light); margin-bottom: 12px;">有任何法規、危害防護、減壓或健促設計疑問嗎？輸入關鍵字，小鹿直接幫您從全島講義中找到答案！</p>
+        <div class="guide-search-bar">
+          <input type="text" class="guide-input" id="guide-input" placeholder="問問題，例如：退避權是什麼？SDS怎麼看？478呼吸法？">
+          <button class="export-btn" id="btn-guide-ask">查詢出處</button>
+        </div>
+        <div id="guide-answers-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Brand Story (Extra requirement 3) -->
+  <div class="modal-overlay" id="modal-brand">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">🎓 教學理念與個人品牌特色</div>
+        <button class="modal-close-btn" data-close="modal-brand" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="font-size: 3rem; margin-bottom: 6px;">🦌</div>
+          <h3 style="font-family: var(--font-heading); color: var(--primary); font-size: 1.4rem;">ㄚ秀姐姐 ✕ 輔英科技大學</h3>
+          <p style="font-size: 0.9rem; color: var(--accent); font-weight: bold;">職人健康領航・培育未來新世代職場菁英</p>
+        </div>
+        <div class="textbook-content">
+          <p>由<b>輔英科技大學</b>專業師資團隊與<b>「ㄚ秀姐姐」</b>共同打造，結合職業安全衛生法規、職場心理調適、動態辦公人體工學及健促企劃實作，致力於縮短校園學習與產業職場健康的距離，守護每位青年工作者的身心幸福！</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0;">
+            <div style="background: var(--card-bg); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line);">
+              <div style="font-size: 1.3rem;">🛡️</div>
+              <strong>專業安衛法規</strong>
+              <div style="font-size: 0.8rem; color: var(--ink-light);">掌握知情權、退避權與危害辨識，築起第一道防線。</div>
+            </div>
+            <div style="background: var(--card-bg); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line);">
+              <div style="font-size: 1.3rem;">🧠</div>
+              <strong>身心正念調適</strong>
+              <div style="font-size: 0.8rem; color: var(--ink-light);">告別過勞與工作倦怠，熟練 4-7-8 放鬆呼吸技巧。</div>
+            </div>
+            <div style="background: var(--card-bg); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line);">
+              <div style="font-size: 1.3rem;">🏃</div>
+              <strong>動態人體工學</strong>
+              <div style="font-size: 0.8rem; color: var(--ink-light);">打破久坐枷鎖，每天 5 分鐘微伸展，活力加倍。</div>
+            </div>
+            <div style="background: var(--card-bg); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line);">
+              <div style="font-size: 1.3rem;">🌱</div>
+              <strong>ESG 健促實踐</strong>
+              <div style="font-size: 0.8rem; color: var(--ink-light);">運用 PDCA 循環，獨立提案具備社會責任的企業方案。</div>
+            </div>
+          </div>
+          <blockquote>
+            「做自己健康的第一責任人，職場旅程才會走得長遠又精彩！」── ㄚ秀姐姐
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Certificate -->
+  <div class="modal-overlay" id="modal-cert">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">📜 職人健康領航結業證書</div>
+        <button class="modal-close-btn" data-close="modal-cert" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="cert-frame" id="printable-certificate">
+          <div style="font-size: 2.2rem; margin-bottom: 4px;">🏆</div>
+          <h2 class="cert-title">職人健康領航結業證書</h2>
+          <div>茲證明優秀學員</div>
+          <div class="cert-recipient" id="cert-user-name">職場健康實踐家</div>
+          <p class="cert-text">
+            已修畢「職人健康領航島」全系列 6 門核心課程，通曉職業安全衛生法規、環境危害辨識、心理壓力調適、動態辦公人體工學、健促企劃設計及企業永續 ESG 實務，特頒此證以資表彰！
+          </p>
+          <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 14px;">
+            <div>
+              <div style="font-size: 0.85rem; color: var(--ink-light);">指導導師</div>
+              <div style="font-family: var(--font-heading); font-weight: bold; color: var(--primary);">ㄚ秀姐姐</div>
+            </div>
+            <div class="cert-seal">
+              輔英科大<br>健促認證
+            </div>
+            <div>
+              <div style="font-size: 0.85rem; color: var(--ink-light);">結業日期</div>
+              <div id="cert-issue-date" style="font-size: 0.9rem; font-weight: bold;">2026-10-30</div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+          <input type="text" class="guide-input" id="cert-name-input" placeholder="輸入您的姓名自訂證書" style="max-width: 220px;">
+          <button class="export-btn" id="btn-print-cert">🖨️ 列印 / 另存 PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Share Card -->
+  <div class="modal-overlay" id="modal-share">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">🔗 分享職人健康領航島</div>
+        <button class="modal-close-btn" data-close="modal-share" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: var(--card-bg); border-radius: var(--radius); padding: 18px; text-align: center; border: 1px solid var(--line); margin-bottom: 16px;">
+          <div style="font-size: 2.5rem; margin-bottom: 6px;">🏝️</div>
+          <h3 style="font-family: var(--font-heading); color: var(--primary); margin-bottom: 4px;">職人健康領航島</h3>
+          <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 10px;">守護職場身心健康，打造青年勞動新活力的知識基地！</p>
+          <div style="background: var(--surface); padding: 8px 12px; border-radius: 6px; border: 1px dashed var(--line); font-size: 0.85rem; word-break: break-all;" id="share-url-text">
+            https://isleforge-tw.netlify.app/
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: center;">
+          <button class="export-btn" id="btn-copy-share-url">📋 複製分享網址</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
